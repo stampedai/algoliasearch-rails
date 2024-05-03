@@ -783,9 +783,10 @@ module AlgoliaSearch
       settings ||= algoliasearch_settings
       name = algolia_index_name(options)
 
-      return @algolia_indexes[[settings, name]] if @algolia_indexes[settings]
+      index_key = [settings, name]
+      return @algolia_indexes[index_key] if @algolia_indexes[index_key]
 
-      @algolia_indexes[settings] = SafeIndex.new(algolia_index_name(options), algoliasearch_options[:raise_on_failure])
+      @algolia_indexes[index_key] = SafeIndex.new(algolia_index_name(options), algoliasearch_options[:raise_on_failure])
 
       index_settings ||= settings.to_settings
       index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
@@ -796,15 +797,15 @@ module AlgoliaSearch
       options[:check_settings] = true if options[:check_settings].nil?
 
       current_settings = if options[:check_settings] && !algolia_indexing_disabled?(options)
-                           @algolia_indexes[settings].get_settings(:getVersion => 1) rescue nil # if the index doesn't exist
+                           @algolia_indexes[index_key].get_settings(:getVersion => 1) rescue nil # if the index doesn't exist
                          end
 
       if !algolia_indexing_disabled?(options) && options[:check_settings] && algoliasearch_settings_changed?(current_settings, index_settings)
         set_settings_method = options[:synchronous] ? :set_settings! : :set_settings
-        @algolia_indexes[settings].send(set_settings_method, index_settings)
+        @algolia_indexes[index_key].send(set_settings_method, index_settings)
       end
 
-      @algolia_indexes[settings]
+      @algolia_indexes[index_key]
     end
 
     private
