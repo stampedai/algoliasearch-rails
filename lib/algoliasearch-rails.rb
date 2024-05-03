@@ -741,7 +741,7 @@ module AlgoliaSearch
       options ||= algoliasearch_options
       name = options[:index_name] || model_name.to_s.gsub('::', '_')
       name = "#{name}_#{Rails.env.to_s}" if options[:per_environment]
-      name
+      name.respond_to?(:call) ? name.call : name
     end
 
     def algolia_must_reindex?(object)
@@ -781,8 +781,9 @@ module AlgoliaSearch
 
       options ||= algoliasearch_options
       settings ||= algoliasearch_settings
+      name = algolia_index_name(options)
 
-      return @algolia_indexes[settings] if @algolia_indexes[settings]
+      return @algolia_indexes[[settings, name]] if @algolia_indexes[settings]
 
       @algolia_indexes[settings] = SafeIndex.new(algolia_index_name(options), algoliasearch_options[:raise_on_failure])
 
